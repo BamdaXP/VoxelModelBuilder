@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
+
 public class ChunkData
 {
     public const int CHUNK_SIZE = 16;
@@ -53,13 +55,19 @@ public class ChunkData
     public ChunkData()
     {
         voxelGrid = new GridData3D<VoxelInfo>(CHUNK_SIZE, CHUNK_HEIGHT, CHUNK_SIZE);
+        VoxelInfo v = VoxelInfoLibrary.GetVoxel("Stone");
+        for (int x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (int z = 0; z < CHUNK_SIZE; z++)
+            {
+                voxelGrid.SetDataAt(x, 64, z, v);
+            }
+        }
     }
 
     public void GenerateMeshAndMats(out Mesh chunkMesh, out Material[] chunkMats)
     {
-        Dictionary<VoxelInfo, CombineInstance> voxelSubInstanceDict = new Dictionary<VoxelInfo, CombineInstance>();
         Dictionary<VoxelInfo, List<Vector3>> voxelVertListDict = new Dictionary<VoxelInfo, List<Vector3>>();
-        Dictionary<VoxelInfo, List<int>> voxelIndexListDict = new Dictionary<VoxelInfo, List<int>>();
 
         List<Material> voxelMatsList = new List<Material>();
 
@@ -74,11 +82,9 @@ public class ChunkData
                     if (v != null)
                     {
                         //Add new if not contains
-                        if (!voxelSubInstanceDict.ContainsKey(v))
+                        if (!voxelVertListDict.ContainsKey(v))
                         {
-                            voxelSubInstanceDict.Add(v, new CombineInstance() { mesh = new Mesh()});
                             voxelVertListDict.Add(v, new List<Vector3>());
-                            voxelIndexListDict.Add(v, new List<int>());
                             voxelMatsList.Add(v.material);
                         }
                             
@@ -86,7 +92,6 @@ public class ChunkData
                         Vector3 voxelPos = new Vector3(x, y, z);
                         //Find corresponding lists
                         List<Vector3> voxelVertsList = voxelVertListDict[v];
-                        List<int> voxelIndsList = voxelIndexListDict[v];
 
 
                         //y-1
@@ -94,7 +99,6 @@ public class ChunkData
                         {
                             foreach (Vector3 dp in QUAD_VERTS[0])
                             {
-                                voxelIndsList.Add(voxelVertsList.Count);
                                 voxelVertsList.Add(dp + voxelPos);
                             }
                         }
@@ -103,7 +107,6 @@ public class ChunkData
                         {
                             foreach (Vector3 dp in QUAD_VERTS[1])
                             {
-                                voxelIndsList.Add(voxelVertsList.Count);
                                 voxelVertsList.Add(dp + voxelPos);
                             }
                         }
@@ -113,7 +116,6 @@ public class ChunkData
                         {
                             foreach (Vector3 dp in QUAD_VERTS[2])
                             {
-                                voxelIndsList.Add(voxelVertsList.Count);
                                 voxelVertsList.Add(dp + voxelPos);
                             }
                         }
@@ -122,7 +124,6 @@ public class ChunkData
                         {
                             foreach (Vector3 dp in QUAD_VERTS[3])
                             {
-                                voxelIndsList.Add(voxelVertsList.Count);
                                 voxelVertsList.Add(dp + voxelPos);
                             }
                         }
@@ -131,7 +132,6 @@ public class ChunkData
                         {
                             foreach (Vector3 dp in QUAD_VERTS[4])
                             {
-                                voxelIndsList.Add(voxelVertsList.Count);
                                 voxelVertsList.Add(dp + voxelPos);
                             }
                         }
@@ -140,7 +140,6 @@ public class ChunkData
                         {
                             foreach (Vector3 dp in QUAD_VERTS[5])
                             {
-                                voxelIndsList.Add(voxelVertsList.Count);
                                 voxelVertsList.Add(dp + voxelPos);
                             }
                         }
@@ -152,21 +151,40 @@ public class ChunkData
             }
         }
 
-        //Setup combine instances in the dict
-        foreach (VoxelInfo v in voxelSubInstanceDict.Keys)
+        //Combine verts and indices and setup submesh descriptors
+        List<Vector3> totalVertices = new List<Vector3>();
+        List<int> totalIndices = new List<int>();
+        List<SubMeshDescriptor> subMeshDescList = new List<SubMeshDescriptor>();
+        foreach (var verts in voxelVertListDict.Values)
         {
-            voxelSubInstanceDict[v].mesh.SetVertices(voxelVertListDict[v]);
-            voxelSubInstanceDict[v].mesh.SetIndices(voxelIndexListDict[v], MeshTopology.Quads, 0);
+            //Add a descriptor for each vert list
+            subMeshDescList.Add(new SubMeshDescriptor(totalIndices.Count, verts.Count, MeshTopology.Quads));
+            //Append to total lists
+            foreach (var vert in verts)
+            {
+                totalIndices.Add(totalIndices.Count);
+                totalVertices.Add(vert);
+            }
         }
 
-        //Output voxelmesh,set false to get separated meshes
+        //Output voxelmesh
         chunkMesh = new Mesh();
-        List<CombineInstance> cinsList = new List<CombineInstance>(voxelSubInstanceDict.Values);
-        chunkMesh.CombineMeshes(cinsList.ToArray(),false);
+        chunkMesh.SetVertices(totalVertices);//Set vertex buffer
+        chunkMesh.SetIndexBufferParams(totalIndices.Count, IndexFormat.UInt32);//Set index buffer format and data,since the max count is 65565*4*6 so must be int32
+        chunkMesh.SetIndexBufferData(totalIndices, 0, 0, totalIndices.Count);
+
+        //Set submesh description
+        int i = 0;
+        foreach (var desc in subMeshDescList)
+        {
+            chunkMesh.SetSubMesh(i, desc);
+            i++;
+        }
+        //optimization
         chunkMesh.Optimize();
-        chunkMesh.RecalculateBounds();
         chunkMesh.RecalculateNormals();
         chunkMesh.RecalculateTangents();
+
 
         //Output voxel material array
         chunkMats = voxelMatsList.ToArray();

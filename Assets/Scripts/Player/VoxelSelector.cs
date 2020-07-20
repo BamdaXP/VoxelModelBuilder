@@ -1,14 +1,16 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
+[System.Serializable]
+public struct SelectionPoint
+{
+    public Vector3 Position;
+    public Vector3 Normal;
+}
 public class VoxelSelector : MonoBehaviour
 {
     public SelectionType selectionType;
     public float selectionRange = 10f;
-    public VoxelInfo selectedVoxel =>
-        WorldDataManager.Instance.ActiveWorld.GetVoxelAt(selectedPosition);
-    public Vector3 selectedPosition;
-    public Vector3 selectedNormal;
+    public SelectionPoint selection;
     public bool selecting { get; private set; }
     public enum SelectionType
     {
@@ -22,10 +24,11 @@ public class VoxelSelector : MonoBehaviour
         SelectVoxel();
     }
 
-    public void SelectVoxel()
+    private void SelectVoxel()
     {
-        selectedPosition = Vector3.zero;
-        selectedNormal = Vector3.zero;
+        selecting = false;
+        selection.Position = Vector3.zero;
+        selection.Normal = Vector3.zero;
         switch (selectionType)
         {
             case SelectionType.OnHit:
@@ -34,14 +37,14 @@ public class VoxelSelector : MonoBehaviour
                 if (hit.collider)
                 {
                     selecting = true;
-                    selectedPosition = hit.point;
-                    selectedNormal = hit.normal;
+                    selection.Position = hit.point;
+                    selection.Normal = hit.normal;
                 }
                 break;
             case SelectionType.FixRange:
                 selecting = true;
                 Ray r = Camera.main.ScreenPointToRay(Input.mousePosition);
-                selectedPosition = r.origin + r.direction.normalized * selectionRange;
+                selection.Position = r.origin + r.direction.normalized * selectionRange;
                 break;
             case SelectionType.FixRangeOrOnHit:
                 RaycastHit rh;
@@ -49,8 +52,8 @@ public class VoxelSelector : MonoBehaviour
                 if (rh.collider)
                 {
                     selecting = true;
-                    selectedPosition = rh.point;
-                    selectedNormal = rh.normal;
+                    selection.Position = rh.point;
+                    selection.Normal = rh.normal;
                 }
                 break;
             default:

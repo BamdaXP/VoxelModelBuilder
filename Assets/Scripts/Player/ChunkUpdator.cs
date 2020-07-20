@@ -10,20 +10,11 @@ public class ChunkUpdator : MonoBehaviour
 
     private void Start()
     {
+        //Start the world
         WorldDataManager.Instance.CreateNewWorld("new world");
         WorldDataManager.Instance.ActivateWorld("new world");
         SendChunkRequest();
 
-        VoxelInfo v = VoxelInfoLibrary.GetTile("Stone");
-        if (WorldDataManager.Instance == null)
-            Debug.Log("null");
-        for (int x = -10; x < 10; x++)
-        {
-            for (int y = -10; y < 10; y++)
-            {
-                WorldDataManager.Instance.ActiveWorld.SetVoxelAt(new Vector3(x, 0, y), v);
-            }
-        }
         WorldDataManager.Instance.ActiveWorld.RefreshAllActiveChunks();
     }
     private void Update()

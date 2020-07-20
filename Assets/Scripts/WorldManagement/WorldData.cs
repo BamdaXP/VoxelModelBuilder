@@ -37,9 +37,17 @@ public class WorldData
         Vector3Int voxelPos = GetVoxelPositionInChunk(worldPos,chunkPos);
         SetVoxelAt(chunkPos, voxelPos, v);
     }
-    public void SetVoxelAt(Vector2Int chunkPos, Vector3Int voxelPos, VoxelInfo v)
+    public void SetVoxelAt(Vector2Int chunkPos, Vector3Int voxelPosInChunk, VoxelInfo v)
     {
-        GeneratedChunksDict[chunkPos].chunkData.voxelGrid.SetDataAt(voxelPos.x, voxelPos.y, voxelPos.z, v);
+        if (GeneratedChunksDict.ContainsKey(chunkPos))
+        {
+            GeneratedChunksDict[chunkPos].chunkData.voxelGrid.SetDataAt(voxelPosInChunk.x, voxelPosInChunk.y, voxelPosInChunk.z, v);
+        }
+        else
+        {
+            Debug.LogWarning(chunkPos + "has not been generated yet!");
+        }
+        
     }
 
     public void UpdateWorld(List<Vector2Int> requiredChunks)

@@ -15,8 +15,15 @@ public static class VoxelInfoLibrary
         }
 
     }
-    public static VoxelInfo GetTile(string name)
+    public static VoxelInfo GetVoxel(string name)
     {
-        return NameLibrary[name];
+        if (NameLibrary.ContainsKey(name))
+            return NameLibrary[name];
+        else
+        {
+            Debug.LogWarning(name + " Voxel was not found in the library!");
+            return null;
+        }
+            
     }
 }
