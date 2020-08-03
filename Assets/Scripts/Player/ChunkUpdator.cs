@@ -4,7 +4,7 @@ public class ChunkUpdator : MonoBehaviour
 {
     public Vector3Int positionInt;
     public Vector2Int chunkPos;
-    public Vector3Int positionInChunk;
+    public Vector3Int certainPos;
     [Range(0,5)]
     public int renderRange = 1;
 
@@ -25,9 +25,9 @@ public class ChunkUpdator : MonoBehaviour
     public void SendChunkRequest()
     { 
         Vector3 position = transform.position;
-        positionInt = WorldDataManager.Instance.ActiveWorld.GetGlobalVoxelPosition(position);
-        chunkPos = WorldDataManager.Instance.ActiveWorld.GetChunkPosition(position);
-        positionInChunk = WorldDataManager.Instance.ActiveWorld.GetVoxelPositionInChunk(position,chunkPos);
+        positionInt = MathHelper.WorldPosToWorldIntPos(position);
+        chunkPos = MathHelper.WorldPosToChunkPos(position);
+        certainPos =MathHelper.WorldPosToCertainPos(position);
 
 
         List<Vector2Int> requiredChunks = new List<Vector2Int>();

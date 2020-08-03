@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class WorldData
 {
     public static Transform worldTransform => GameObject.Find("WorldObject").GetComponent<Transform>();
-    public const int WORLD_SIZE = 1024;
     public string name;
     public int WorldSeed { get; private set; }
 
@@ -23,19 +22,28 @@ public class WorldData
 
     public VoxelInfo GetVoxelAt(Vector3 worldPos)
     {
-        Vector2Int chunkPos = GetChunkPosition(worldPos);
-        Vector3Int voxelPos = GetVoxelPositionInChunk(worldPos,chunkPos);
-        return GetTileAt(chunkPos, voxelPos);
+        Vector2Int chunkPos = MathHelper.WorldPosToChunkPos(worldPos);
+        Vector3Int certainPos = MathHelper.WorldPosToCertainPos(worldPos);
+        return GetVoxelAt(chunkPos, certainPos);
     }
-    public VoxelInfo GetTileAt(Vector2Int chunkPos, Vector3Int voxelPos)
+    public VoxelInfo GetVoxelAt(Vector2Int chunkPos, Vector3Int voxelPos)
     {
-        return GeneratedChunksDict[chunkPos].chunkData.voxelGrid.GetDataAt(voxelPos.x, voxelPos.y, voxelPos.z);
+        if (GeneratedChunksDict.ContainsKey(chunkPos))
+        {
+            return GeneratedChunksDict[chunkPos].chunkData.voxelGrid.GetDataAt(voxelPos.x, voxelPos.y, voxelPos.z);
+        }
+        else
+        {
+            Debug.LogWarning(chunkPos + "has not been generated yet!");
+            return null;
+        }
     }
+
     public void SetVoxelAt(Vector3 worldPos, VoxelInfo v)
     {
-        Vector2Int chunkPos = GetChunkPosition(worldPos);
-        Vector3Int voxelPos = GetVoxelPositionInChunk(worldPos,chunkPos);
-        SetVoxelAt(chunkPos, voxelPos, v);
+        Vector2Int chunkPos = MathHelper.WorldPosToChunkPos(worldPos);
+        Vector3Int certainPos = MathHelper.WorldPosToCertainPos(worldPos);
+        SetVoxelAt(chunkPos, certainPos, v);
     }
     public void SetVoxelAt(Vector2Int chunkPos, Vector3Int voxelPosInChunk, VoxelInfo v)
     {
@@ -128,28 +136,5 @@ public class WorldData
         ActiveChunksDict[position].UpdateChunk();
     }
 
-    public Vector2Int GetChunkPosition(Vector3 worldPos)
-    {
 
-        Vector2Int value =  new Vector2Int(
-            Mathf.FloorToInt(worldPos.x / ChunkData.CHUNK_SIZE),
-            Mathf.FloorToInt(worldPos.z / ChunkData.CHUNK_SIZE));
-        return value;
-    }
-    public Vector3Int GetGlobalVoxelPosition(Vector3 worldPos)
-    {
-        Vector3Int value = new Vector3Int(
-            Mathf.FloorToInt(worldPos.x),
-            Mathf.FloorToInt(worldPos.y),
-            Mathf.FloorToInt(worldPos.z));
-        return value;
-    }
-    public Vector3Int GetVoxelPositionInChunk(Vector3 worldPos,Vector2Int chunkPos)
-    {
-        Vector3Int value = new Vector3Int(
-            Mathf.FloorToInt(worldPos.x),
-            Mathf.FloorToInt(worldPos.y),
-            Mathf.FloorToInt(worldPos.z));
-        return value-new Vector3Int(chunkPos.x,0,chunkPos.y)*ChunkData.CHUNK_SIZE;
-    }
 }
