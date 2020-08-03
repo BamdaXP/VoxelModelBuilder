@@ -5,6 +5,7 @@ public struct SelectionPoint
 {
     public Vector3 Position;
     public Vector3 Normal;
+    public GameObject Object;
 }
 public class VoxelSelector : MonoBehaviour
 {
@@ -39,6 +40,7 @@ public class VoxelSelector : MonoBehaviour
                     selecting = true;
                     selection.Position = hit.point;
                     selection.Normal = hit.normal;
+                    selection.Object = hit.transform.gameObject;
                 }
                 break;
             case SelectionType.FixRange:
@@ -54,6 +56,7 @@ public class VoxelSelector : MonoBehaviour
                     selecting = true;
                     selection.Position = rh.point;
                     selection.Normal = rh.normal;
+                    selection.Object = rh.transform.gameObject;
                 }
                 break;
             default:

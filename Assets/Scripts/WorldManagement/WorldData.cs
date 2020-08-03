@@ -12,12 +12,14 @@ public class WorldData
 
     public Dictionary<Vector2Int, ChunkComponent> ActiveChunksDict;
     public Dictionary<Vector2Int, ChunkComponent> GeneratedChunksDict;
+    public List<ObjectData> ObjectList;
     public WorldData(string name)
     {
         this.name = name;
 
         ActiveChunksDict = new Dictionary<Vector2Int, ChunkComponent>();
         GeneratedChunksDict = new Dictionary<Vector2Int, ChunkComponent>();
+        ObjectList = new List<ObjectData>();
     }
 
 
@@ -127,7 +129,6 @@ public class WorldData
     {
         ActiveChunksDict[position].UpdateChunk();
     }
-
     public Vector2Int GetChunkPosition(Vector3 worldPos)
     {
 
@@ -151,5 +152,48 @@ public class WorldData
             Mathf.FloorToInt(worldPos.y),
             Mathf.FloorToInt(worldPos.z));
         return value-new Vector3Int(chunkPos.x,0,chunkPos.y)*ChunkData.CHUNK_SIZE;
+    }
+    public void UpdateObjects(Vector3 worldPos,VoxelInfo v,bool isErase = false)
+    {
+ 
+
+        if (!isErase)
+        {
+            
+            Vector3Int pos = new Vector3Int(Mathf.FloorToInt(worldPos.x), Mathf.FloorToInt(worldPos.y), Mathf.FloorToInt(worldPos.z));
+            List<ObjectData> includeObjects = new List<ObjectData>();
+            foreach (var obj in ObjectList)
+            {
+                if (obj.UpdateObject(pos, v))
+                {
+                    includeObjects.Add(obj);
+                }
+            }
+            if (includeObjects.Count == 0)
+                ObjectList.Add(new ObjectData(pos, v));
+            else
+            {
+                var obj = includeObjects[0];
+                for (int i = 1; i < includeObjects.Count; i++)
+                {
+                    obj += includeObjects[i];
+                    includeObjects[i].Destroy();
+                    ObjectList.Remove(includeObjects[i]);
+                    
+                }
+            }
+        }
+        else
+        {
+            Vector3Int pos = new Vector3Int(Mathf.FloorToInt(worldPos.x), Mathf.FloorToInt(worldPos.y), Mathf.FloorToInt(worldPos.z));
+            for (int i = 0; i < ObjectList.Count; i++)
+            {
+                if (ObjectList[i].UpdateObject(pos, null, true))
+                {
+                    ObjectList.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
     }
 }

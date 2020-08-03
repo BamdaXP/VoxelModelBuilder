@@ -6,7 +6,7 @@ public class ChunkData
 {
     public const int CHUNK_SIZE = 16;
     public const int CHUNK_HEIGHT = 256;
-    public readonly Vector3[][] QUAD_VERTS = new Vector3[][] { 
+    public static readonly Vector3[][] QUAD_VERTS = new Vector3[][] { 
         //y-1
         new Vector3[] {
             new Vector3(0,0,1),
@@ -64,7 +64,7 @@ public class ChunkData
             }
         }
     }
-
+   
     public void GenerateMeshAndMats(out Mesh chunkMesh, out Material[] chunkMats)
     {
         Dictionary<VoxelInfo, List<Vector3>> voxelVertListDict = new Dictionary<VoxelInfo, List<Vector3>>();
@@ -73,7 +73,7 @@ public class ChunkData
 
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
-            for (int y = 0; y < CHUNK_HEIGHT; y++)
+            for (int y = 64; y < 65; y++)
             {
                 for (int z = 0; z < CHUNK_SIZE; z++)
                 {
