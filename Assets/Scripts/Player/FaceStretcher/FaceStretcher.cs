@@ -4,8 +4,8 @@ using System.Drawing;
 
 public class FaceStretcher : MonoBehaviour
 {
-    public VoxelSelector voxelSelector;
-    public SelectionIndicator selectionIndicator;
+    public FaceSelector voxelSelector;
+    public FaceIndicator selectionIndicator;
     public int stretchResult;
     private Vector3? m_downMousePoint;
     private Vector3? m_upMousePoint;

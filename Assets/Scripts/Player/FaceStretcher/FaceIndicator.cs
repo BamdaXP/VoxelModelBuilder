@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-public class SelectionIndicator : MonoBehaviour
+public class FaceIndicator : MonoBehaviour
 {
-    public VoxelSelector voxelSelector;
+    public FaceSelector voxelSelector;
     public FaceStretcher faceStretcher;
 
     public List<Vector3Int> data;

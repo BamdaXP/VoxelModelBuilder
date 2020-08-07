@@ -87,6 +87,11 @@ public class WorldData
         Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
         obj.voxelObjectData.SetVoxelAt(p - obj.basePoint, v);
     }
+    public void DeleteVoxelAt(ObjectComponent obj, Vector3 worldPos)
+    {
+        Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
+        obj.voxelObjectData.DeleteVoxelAt(p - obj.basePoint);
+    }
     public void UpdateAllObjects()
     {
         foreach (var o in ObjectList)

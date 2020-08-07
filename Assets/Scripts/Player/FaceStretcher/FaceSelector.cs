@@ -1,15 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 public struct SelectionPoint
 {
     public Vector3Int position;
     public Vector3 normal;
 }
-public class VoxelSelector : MonoBehaviour
+public class FaceSelector : MonoBehaviour
 {
     public HitPointReader hitPointReader;
     public ObjectSelector objectSelector;
