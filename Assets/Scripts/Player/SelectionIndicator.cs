@@ -4,26 +4,30 @@ using UnityEngine.Rendering;
 public class SelectionIndicator : MonoBehaviour
 {
     public VoxelSelector voxelSelector;
+    public FaceStretcher faceStretcher;
 
-    private List<Vector3Int> m_data;
+    public List<Vector3Int> data;
+
     private MeshFilter m_meshFilter;
     public void Awake()
     {
-        m_data = new List<Vector3Int>();
+        data = new List<Vector3Int>();
         m_meshFilter = GetComponent<MeshFilter>();
     }
     private void Update()
     {
-        m_data.Clear();
-        foreach (var pair in voxelSelector.hitPointDict)
+        data.Clear();
+        foreach (var pair in faceStretcher.stretchedPointDict)
         {
             foreach (var v in pair.Value)
             {
-                Vector3Int worldIntPos = v.position + pair.Key.basePoint;
+                Vector3Int p = v + pair.Key.basePoint;
+
+
                 //Do not need repeated points
-                if (!m_data.Contains(worldIntPos))
+                if (!data.Contains(p))
                 {
-                    m_data.Add(worldIntPos);
+                    data.Add(p);
                 }
             }
         }
@@ -36,16 +40,17 @@ public class SelectionIndicator : MonoBehaviour
         List<int> totalIndices = new List<int>();
 
 
-        foreach (var v in m_data)
+        foreach (var v in data)
         {
             for (int i = 0; i < 6; i++)
             {
-                if (!m_data.Contains(v + ObjectData.NORMALS[i]))
+                Vector3Int p = v + ObjectData.NORMALS[i];
+                if (!data.Contains(p))
                 {
-                    foreach (var p in ObjectData.QUAD_VERTS[i])
+                    foreach (var dp in ObjectData.QUAD_VERTS[i])
                     {
                         totalIndices.Add(totalIndices.Count);
-                        totalVertices.Add(v+p);
+                        totalVertices.Add(v+dp);
                     }
                 }
 

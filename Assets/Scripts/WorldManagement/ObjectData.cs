@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SocialPlatforms;
+
 public struct Voxel
 {
     public VoxelInfo voxel;
@@ -83,31 +85,23 @@ public class ObjectData
     }
     public void SetVoxelAt(Vector3Int localPosition, Voxel v)
     {
-        if (VoxelDataDict.ContainsKey(localPosition))
+        if (v.voxel == null)
         {
-            if (v.voxel == null)
-            {
-                VoxelDataDict.Remove(localPosition);
-            }
-            else
-            {
-                VoxelDataDict[localPosition] = v;
-            }
-        } 
+            DeleteVoxelAt(localPosition);
+        }
         else
         {
-            if (v.voxel == null)
-            {
-                return;
-            }
-            else
-            {
-                VoxelDataDict.Add(localPosition, v);
-            }
+            VoxelDataDict.Add(localPosition, v);
         }
         
     }
-
+    public void DeleteVoxelAt(Vector3Int localPosition)
+    {
+        if (VoxelDataDict.ContainsKey(localPosition))
+        {
+            VoxelDataDict.Remove(localPosition);
+        }
+    }
     public void GenerateMeshAndMats(out Mesh mesh, out Material[] mats)
     {
         Dictionary<VoxelInfo, List<Vector3>> voxelVertListDict = new Dictionary<VoxelInfo, List<Vector3>>();

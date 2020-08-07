@@ -14,21 +14,22 @@ public class VoxelSelector : MonoBehaviour
     public HitPointReader hitPointReader;
     public ObjectSelector objectSelector;
 
-    public GameObject selectionIndicator;
+    public Dictionary<ObjectComponent, List<Vector3Int>> selectionPointDict;
 
-    public Dictionary<ObjectComponent, List<SelectionPoint>> hitPointDict;
+    public Vector3? normal;
 
     //The point when left mouse clicked down
-    private HitPoint? downPoint;
+    private HitPoint? m_downPoint;
     //The point when left mouse release up
-    private HitPoint? upPoint;
+    private HitPoint? m_upPoint;
 
     // Start is called before the first frame update
     private void Awake()
     {
-        downPoint = null;
-        upPoint = null;
-        hitPointDict = new Dictionary<ObjectComponent, List<SelectionPoint>>();
+        normal = null;
+        m_downPoint = null;
+        m_upPoint = null;
+        selectionPointDict = new Dictionary<ObjectComponent, List<Vector3Int>>();
     }
 
 
@@ -38,26 +39,27 @@ public class VoxelSelector : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            upPoint = null;
-            downPoint = null;
+            m_upPoint = null;
+            m_downPoint = null;
             if (hitPointReader.hitting)
             {
-                downPoint = hitPointReader.hitPoint;
+                m_downPoint = hitPointReader.hitPoint;
+                normal = m_downPoint.Value.normal;
             }
         }
         if (Input.GetKey(KeyCode.Mouse0))
         {
             HitPoint currentPoint = hitPointReader.hitPoint;
-            if (downPoint != null && hitPointReader.hitting)
+            if (m_downPoint != null && hitPointReader.hitting)
             {
                 //Must be same normal face
-                if (currentPoint.normal == downPoint.Value.normal &&
-                    Vector3.Dot(currentPoint.position - downPoint.Value.position, currentPoint.normal) == 0)
+                if (currentPoint.normal == m_downPoint.Value.normal &&
+                    Vector3.Dot(currentPoint.position - m_downPoint.Value.position, currentPoint.normal) == 0)
                 {
-                    upPoint = currentPoint;
+                    m_upPoint = currentPoint;
 
-                    Vector3 down = downPoint.Value.position - downPoint.Value.normal / 2;
-                    Vector3 up = upPoint.Value.position - upPoint.Value.normal / 2;
+                    Vector3 down = m_downPoint.Value.position - m_downPoint.Value.normal / 2;
+                    Vector3 up = m_upPoint.Value.position - m_upPoint.Value.normal / 2;
                     Vector3Int min = MathHelper.WorldPosToWorldIntPos(
                         new Vector3(
                             Mathf.Min(down.x, up.x),
@@ -73,10 +75,10 @@ public class VoxelSelector : MonoBehaviour
                             )
                         );
 
-                    hitPointDict.Clear();
+                    selectionPointDict.Clear();
                     foreach (var o in objectSelector.selectedObjects)
                     {
-                        List<SelectionPoint> points = new List<SelectionPoint>();
+                        List<Vector3Int> points = new List<Vector3Int>();
 
                         for (int x = min.x; x <= max.x; x++)
                         {
@@ -87,12 +89,12 @@ public class VoxelSelector : MonoBehaviour
                                     Vector3Int pos = new Vector3Int(x, y, z);
                                     if (o.voxelObjectData.GetVoxelAt(pos-o.basePoint).voxel != null)
                                     {
-                                        points.Add(new SelectionPoint() { position = pos,normal = upPoint.Value.normal});
+                                        points.Add(pos);
                                     }
                                 }
                             }
                         }
-                        hitPointDict.Add(o, points);
+                        selectionPointDict.Add(o, points);
                     }
                 }
             }
