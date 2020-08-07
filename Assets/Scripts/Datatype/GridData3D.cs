@@ -27,14 +27,14 @@ public class GridData3D<DType> : IDisposable
     public bool Disposed { get; private set; }
     public GridData3D(int w, int h, int l)
     {
-        Data = new DType[w* h* l];
+        Data = new DType[w * h * l];
         Width = w;
         Height = h;
         Length = l;
 
         pinnedHandle = GCHandle.Alloc(Data);
     }
-    public GridData3D(DType[] d,int w, int h, int l)
+    public GridData3D(DType[] d, int w, int h, int l)
     {
         Data = d;
         Width = w;
@@ -44,11 +44,11 @@ public class GridData3D<DType> : IDisposable
     }
     public int GetIndex(int x, int y, int z)
     {
-        return z * Width * Height + y * Width + x;  
+        return z * Width * Height + y * Width + x;
     }
     public void SetDataAt(int x, int y, int z, DType t)
     {
-        Data[GetIndex(x,y,z)] = t;
+        Data[GetIndex(x, y, z)] = t;
     }
     public DType GetDataAt(int x, int y, int z)
     {

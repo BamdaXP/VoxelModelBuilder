@@ -24,6 +24,6 @@ public static class VoxelInfoLibrary
             Debug.LogWarning(name + " Voxel was not found in the library!");
             return null;
         }
-            
+
     }
 }

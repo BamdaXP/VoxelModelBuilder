@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 public class WorldDataManager : Singleton<WorldDataManager>
 {
     private List<WorldData> m_availableWorlds;
     public WorldData ActiveWorld { get; private set; }
-    private void Start()
+    new private void Awake()
     {
+        base.Awake();
         m_availableWorlds = new List<WorldData>();
     }
 

@@ -11,13 +11,13 @@ public class GridData2D<DType> : IDisposable
     public bool Disposed { get; private set; }
     public GridData2D(int w, int h)
     {
-        Data = new DType[w*h];
+        Data = new DType[w * h];
         Width = w;
         Height = h;
 
         pinnedHandle = GCHandle.Alloc(Data);
     }
-    public GridData2D(DType[] d,int w,int h)
+    public GridData2D(DType[] d, int w, int h)
     {
         Data = d;
         Width = w;
@@ -25,13 +25,13 @@ public class GridData2D<DType> : IDisposable
 
         pinnedHandle = GCHandle.Alloc(Data);
     }
-    public int GetIndex(int x,int y)
+    public int GetIndex(int x, int y)
     {
         return y * Width + x;
     }
     public void SetDataAt(int x, int y, DType t)
     {
-        Data[GetIndex(x,y)] = t;
+        Data[GetIndex(x, y)] = t;
     }
     public DType GetDataAt(int x, int y)
     {
