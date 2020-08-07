@@ -8,7 +8,7 @@ public struct Voxel
 }
 public class ObjectData
 {
-    public readonly Vector3[][] QUAD_VERTS = new Vector3[][] { 
+    public static readonly Vector3[][] QUAD_VERTS = new Vector3[][] { 
         //y-1
         new Vector3[] {
             new Vector3(0,0,1),
