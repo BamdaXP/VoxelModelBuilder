@@ -14,16 +14,40 @@ public class ObjectSelector : MonoBehaviour
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        //click to select pointing object 
+        if (Input.GetKeyDown(KeyCode.Mouse0) && hitPointReader.hitting)
         {
-            if (!Input.GetKeyDown(KeyCode.LeftControl))
+            //holding contorl to addon to exsiting ones
+            if (!Input.GetKey(KeyCode.LeftControl))
             {
                 selectedObjects.Clear();
             }
-            ObjectComponent[] os = 
+
+            ObjectComponent[] os =
                 WorldDataManager.Instance.ActiveWorld.GetVoxelObjectsAt(
                     hitPointReader.hitPoint.position - hitPointReader.hitPoint.normal / 2);
-            selectedObjects.AddRange(os);
+
+
+            //holding shift to only get first one
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                if (!selectedObjects.Contains(os[0]))
+                {
+                    selectedObjects.Add(os[0]);
+                }
+
+            }
+            else
+            {
+                foreach (var o in os)
+                {
+                    if (!selectedObjects.Contains(os[0]))
+                    {
+                        selectedObjects.Add(o);
+                    }
+                }
+            }
+
 
             Debug.Log("Selected Object " + selectedObjects);
         }

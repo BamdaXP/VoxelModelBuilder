@@ -2,6 +2,7 @@
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
+using UnityEngine.UI;
 
 public class WorldData
 {
@@ -26,7 +27,7 @@ public class WorldData
     }
     public void MergeTwoObjects(ObjectComponent o1, ObjectComponent o2, MergeType mergeType = MergeType.Or)
     {
-
+        
         switch (mergeType)
         {
             case MergeType.Or:
@@ -44,17 +45,20 @@ public class WorldData
                 }
                 break;
             case MergeType.And:
+                Dictionary<Vector3Int, Voxel> newDataDict = new Dictionary<Vector3Int, Voxel>();
                 foreach (var pair in o1.voxelObjectData.VoxelDataDict)
                 {
+                    
                     Vector3Int worldPos = pair.Key + o1.basePoint;
-                    Voxel v1 = pair.Value;//o1 must has
                     Voxel v2 = GetVoxelAt(o2, worldPos);
-                    //If o1 has but o2 dosen't have
-                    if (v2.voxel == null)
+                    //If o1 and 2o both have
+                    if (v2.voxel != null)
                     {
                         //Set empty voxel
-                        SetVoxelAt(o1, worldPos, new Voxel());
+                        newDataDict.Add(pair.Key - o1.basePoint, pair.Value);
                     }
+                    //change to new data dict
+                    o1.voxelObjectData.VoxelDataDict = newDataDict;
                 }
                 break;
             case MergeType.Not:
@@ -116,6 +120,18 @@ public class WorldData
 
         return c;
     }
+    public ObjectComponent CopyObject(ObjectComponent o)
+    {
+        var newObject = CreateNewObject(o.basePoint);
+        foreach (var pair in o.voxelObjectData.VoxelDataDict)
+        {
+            newObject.voxelObjectData.VoxelDataDict.Add(pair.Key, pair.Value);
+        }
+
+        newObject.UpdateObjectMesh();
+        return newObject;
+        
+    }
     public ObjectComponent GetVoxelObject(int index)
     {
         return ObjectList[index];
@@ -147,11 +163,22 @@ public class WorldData
     }
     public void DeleteObject(int index)
     {
-        GameObject.Destroy(ObjectList[index].gameObject);
+        var obj = ObjectList[index];
+        var selectedList = ToolManager.Instance.objectManipulator.objectSelector.selectedObjects;
+        if (selectedList.Contains(obj))
+        {
+            selectedList.Remove(obj);
+        }
+        GameObject.Destroy(obj.gameObject);
         ObjectList.RemoveAt(index);
     }
     public void DeleteObject(ObjectComponent o)
     {
+        var selectedList = ToolManager.Instance.objectManipulator.objectSelector.selectedObjects;
+        if (selectedList.Contains(o))
+        {
+            selectedList.Remove(o);
+        }
         GameObject.Destroy(o.gameObject);
         ObjectList.Remove(o);
     }
