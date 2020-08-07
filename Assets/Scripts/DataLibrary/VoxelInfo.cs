@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.Tilemaps;
-[CreateAssetMenu(fileName = "New Voxel",menuName ="Voxel")]
+[CreateAssetMenu(fileName = "New Voxel", menuName = "Voxel")]
 public class VoxelInfo : ScriptableObject
 {
     public Material material;

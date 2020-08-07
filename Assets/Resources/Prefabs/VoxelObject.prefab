@@ -9,12 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3880298787723697142}
+  - component: {fileID: 3880298787723697139}
   - component: {fileID: 3880298787723697141}
   - component: {fileID: 3880298787723697140}
-  - component: {fileID: 3880298787723697139}
   - component: {fileID: -4409728896291743677}
   m_Layer: 0
-  m_Name: ChunkObject
+  m_Name: VoxelObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34,6 +34,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3880298787723697139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3880298787723697138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccba789a1642aaa42b932f9910285ca0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  basePoint: {x: 0, y: 0, z: 0}
+  meshFilter: {fileID: 3880298787723697141}
+  meshRenderer: {fileID: 3880298787723697140}
+  meshCollider: {fileID: -4409728896291743677}
 --- !u!33 &3880298787723697141
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -59,8 +75,7 @@ MeshRenderer:
   m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 063aa4ccf0443f74da4ef4ac1abd4493, type: 2}
+  m_Materials: []
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -81,21 +96,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &3880298787723697139
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3880298787723697138}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e9b561a783976f459dbf56b71861946, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  voxelMeshFilter: {fileID: 3880298787723697141}
-  voxelMeshRenderer: {fileID: 3880298787723697140}
-  voxelCollider: {fileID: -4409728896291743677}
 --- !u!64 &-4409728896291743677
 MeshCollider:
   m_ObjectHideFlags: 0

@@ -1,63 +1,106 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using UnityEngine;
+using UnityEngine.Assertions.Must;
 
-[System.Serializable]
 public struct SelectionPoint
 {
-    public Vector3 Position;
-    public Vector3 Normal;
+    public Vector3Int position;
+    public Vector3 normal;
 }
 public class VoxelSelector : MonoBehaviour
 {
-    public SelectionType selectionType;
-    public float selectionRange = 10f;
-    public SelectionPoint selection;
-    public bool selecting { get; private set; }
-    public enum SelectionType
+    public HitPointReader hitPointReader;
+    public ObjectSelector objectSelector;
+
+    public GameObject selectionIndicator;
+
+    public Dictionary<ObjectComponent, List<SelectionPoint>> hitPointDict;
+
+    //The point when left mouse clicked down
+    private HitPoint? downPoint;
+    //The point when left mouse release up
+    private HitPoint? upPoint;
+
+    // Start is called before the first frame update
+    private void Awake()
     {
-        OnHit,
-        FixRange,
-        FixRangeOrOnHit,
+        downPoint = null;
+        upPoint = null;
+        hitPointDict = new Dictionary<ObjectComponent, List<SelectionPoint>>();
     }
 
-    private void Update()
-    {
-        SelectVoxel();
-    }
 
-    private void SelectVoxel()
+    // Update is called once per frame
+    void Update()
     {
-        selecting = false;
-        selection.Position = Vector3.zero;
-        selection.Normal = Vector3.zero;
-        switch (selectionType)
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            case SelectionType.OnHit:
-                RaycastHit hit;
-                Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit);
-                if (hit.collider)
+            upPoint = null;
+            downPoint = null;
+            if (hitPointReader.hitting)
+            {
+                downPoint = hitPointReader.hitPoint;
+            }
+        }
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            HitPoint currentPoint = hitPointReader.hitPoint;
+            if (downPoint != null && hitPointReader.hitting)
+            {
+                //Must be same normal face
+                if (currentPoint.normal == downPoint.Value.normal &&
+                    Vector3.Dot(currentPoint.position - downPoint.Value.position, currentPoint.normal) == 0)
                 {
-                    selecting = true;
-                    selection.Position = hit.point;
-                    selection.Normal = hit.normal;
+                    upPoint = currentPoint;
+
+                    Vector3 down = downPoint.Value.position - downPoint.Value.normal / 2;
+                    Vector3 up = upPoint.Value.position - upPoint.Value.normal / 2;
+                    Vector3Int min = MathHelper.WorldPosToWorldIntPos(
+                        new Vector3(
+                            Mathf.Min(down.x, up.x),
+                            Mathf.Min(down.y, up.y),
+                            Mathf.Min(down.z, up.z)
+                            )
+                        );
+                    Vector3Int max = MathHelper.WorldPosToWorldIntPos(
+                        new Vector3(
+                            Mathf.Max(down.x, up.x),
+                            Mathf.Max(down.y, up.y),
+                            Mathf.Max(down.z, up.z)
+                            )
+                        );
+
+                    hitPointDict.Clear();
+                    foreach (var o in objectSelector.selectedObjects)
+                    {
+                        List<SelectionPoint> points = new List<SelectionPoint>();
+
+                        for (int x = min.x; x <= max.x; x++)
+                        {
+                            for (int y = min.y; y <= max.y; y++)
+                            {
+                                for (int z = min.z; z <= max.z; z++)
+                                {
+                                    Vector3Int pos = new Vector3Int(x, y, z);
+                                    if (o.voxelObjectData.GetVoxelAt(pos-o.basePoint).voxel != null)
+                                    {
+                                        points.Add(new SelectionPoint() { position = pos,normal = upPoint.Value.normal});
+                                    }
+                                }
+                            }
+                        }
+                        hitPointDict.Add(o, points);
+                    }
                 }
-                break;
-            case SelectionType.FixRange:
-                selecting = true;
-                Ray r = Camera.main.ScreenPointToRay(Input.mousePosition);
-                selection.Position = r.origin + r.direction.normalized * selectionRange;
-                break;
-            case SelectionType.FixRangeOrOnHit:
-                RaycastHit rh;
-                Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out rh, selectionRange);
-                if (rh.collider)
-                {
-                    selecting = true;
-                    selection.Position = rh.point;
-                    selection.Normal = rh.normal;
-                }
-                break;
-            default:
-                break;
+            }
+
+
         }
     }
+
+
+
 }

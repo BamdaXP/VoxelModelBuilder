@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 public struct Matrix3x3
 {
     public float M11;

@@ -1,140 +1,153 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
-
+﻿using System.Collections.Generic;
+using UnityEditorInternal;
+using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 public class WorldData
 {
-    public static Transform worldTransform => GameObject.Find("WorldObject").GetComponent<Transform>();
+    public static Transform WorldTransform => GameObject.Find("WorldObject").GetComponent<Transform>();
     public string name;
-    public int WorldSeed { get; private set; }
 
 
-    public Dictionary<Vector2Int, ChunkComponent> ActiveChunksDict;
-    public Dictionary<Vector2Int, ChunkComponent> GeneratedChunksDict;
+    public List<ObjectComponent> ObjectList;
     public WorldData(string name)
     {
         this.name = name;
 
-        ActiveChunksDict = new Dictionary<Vector2Int, ChunkComponent>();
-        GeneratedChunksDict = new Dictionary<Vector2Int, ChunkComponent>();
+        ObjectList = new List<ObjectComponent>();
     }
 
 
-    public VoxelInfo GetVoxelAt(Vector3 worldPos)
+    public enum MergeType
     {
-        Vector2Int chunkPos = MathHelper.WorldPosToChunkPos(worldPos);
-        Vector3Int certainPos = MathHelper.WorldPosToCertainPos(worldPos);
-        return GetVoxelAt(chunkPos, certainPos);
+        Or,
+        And,
+        Not,
     }
-    public VoxelInfo GetVoxelAt(Vector2Int chunkPos, Vector3Int voxelPos)
+    public void MergeTwoObjects(ObjectComponent o1, ObjectComponent o2, MergeType mergeType = MergeType.Or)
     {
-        if (GeneratedChunksDict.ContainsKey(chunkPos))
-        {
-            return GeneratedChunksDict[chunkPos].chunkData.voxelGrid.GetDataAt(voxelPos.x, voxelPos.y, voxelPos.z);
-        }
-        else
-        {
-            Debug.LogWarning(chunkPos + "has not been generated yet!");
-            return null;
-        }
-    }
 
-    public void SetVoxelAt(Vector3 worldPos, VoxelInfo v)
-    {
-        Vector2Int chunkPos = MathHelper.WorldPosToChunkPos(worldPos);
-        Vector3Int certainPos = MathHelper.WorldPosToCertainPos(worldPos);
-        SetVoxelAt(chunkPos, certainPos, v);
-    }
-    public void SetVoxelAt(Vector2Int chunkPos, Vector3Int voxelPosInChunk, VoxelInfo v)
-    {
-        if (GeneratedChunksDict.ContainsKey(chunkPos))
+        switch (mergeType)
         {
-            GeneratedChunksDict[chunkPos].chunkData.voxelGrid.SetDataAt(voxelPosInChunk.x, voxelPosInChunk.y, voxelPosInChunk.z, v);
+            case MergeType.Or:
+                foreach (var pair in o2.voxelObjectData.VoxelDataDict)
+                {
+                    Vector3Int worldPos = pair.Key + o2.basePoint;
+                    Voxel v1 = GetVoxelAt(o1, worldPos);
+                    Voxel v2 = pair.Value;//o2 must has
+                    //If o1 dosen't have but o2 has
+                    if (v1.voxel == null)
+                    {
+                        //Set o1 empty ones to o2's
+                        SetVoxelAt(o1, worldPos, v2);
+                    }
+                }
+                break;
+            case MergeType.And:
+                foreach (var pair in o1.voxelObjectData.VoxelDataDict)
+                {
+                    Vector3Int worldPos = pair.Key + o1.basePoint;
+                    Voxel v1 = pair.Value;//o1 must has
+                    Voxel v2 = GetVoxelAt(o2, worldPos);
+                    //If o1 has but o2 dosen't have
+                    if (v2.voxel == null)
+                    {
+                        //Set empty voxel
+                        SetVoxelAt(o1, worldPos, new Voxel());
+                    }
+                }
+                break;
+            case MergeType.Not:
+                foreach (var pair in o2.voxelObjectData.VoxelDataDict)
+                {
+                    Vector3Int worldPos = pair.Key + o2.basePoint;
+                    Voxel v1 = GetVoxelAt(o1, worldPos);
+                    Voxel v2 = pair.Value;//o2 must has 
+                    //If o1 and o2 both has
+                    if (v1.voxel != null)
+                    {
+                        //Set empty voxel
+                        SetVoxelAt(o1, worldPos, new Voxel());
+                    }
+                }
+                break;
+            default:
+                break;
         }
-        else
-        {
-            Debug.LogWarning(chunkPos + "has not been generated yet!");
-        }
-        
+        DeleteObject(o2);
+        o1.UpdateObjectMesh();
     }
+    public Voxel GetVoxelAt(ObjectComponent obj, Vector3 worldPos)
+    {
+        Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
+        return obj.voxelObjectData.GetVoxelAt(p - obj.basePoint);
+    }
+    public void SetVoxelAt(ObjectComponent obj, Vector3 worldPos, Voxel v)
+    {
+        Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
+        obj.voxelObjectData.SetVoxelAt(p - obj.basePoint, v);
+    }
+    public void UpdateAllObjects()
+    {
+        foreach (var o in ObjectList)
+        {
+            o.UpdateObjectMesh();
+        }
+    }
+    public ObjectComponent CreateNewObject(Vector3Int basePoint)
+    {
 
-    public void UpdateWorld(List<Vector2Int> requiredChunks)
+        var c = GameObject.Instantiate(
+            Resources.Load<GameObject>("Prefabs/VoxelObject"),
+            basePoint,
+            Quaternion.Euler(new Vector3(0, 0, 0)),
+            WorldTransform).GetComponent<ObjectComponent>();
+
+        //Setup object
+        c.basePoint = basePoint;
+        c.voxelObjectData = new ObjectData();
+
+        ObjectList.Add(c);
+
+        return c;
+    }
+    public ObjectComponent GetVoxelObject(int index)
     {
-        //Load newly needed chunks
-        foreach (var l in requiredChunks)
+        return ObjectList[index];
+    }
+    public int GetVoxelObjectIndex(ObjectComponent o)
+    {
+        return ObjectList.IndexOf(o);
+    }
+    public ObjectComponent[] GetVoxelObjectsAt(Vector3 worldPos)
+    {
+        List<ObjectComponent> result = new List<ObjectComponent>();
+        foreach (var o in ObjectList)
         {
-            if (!ActiveChunksDict.ContainsKey(l))
+            Vector3Int intPos = MathHelper.WorldPosToWorldIntPos(worldPos);
+            //local position
+            if (o.voxelObjectData.GetVoxelAt(intPos-o.basePoint).voxel != null)
             {
-                if (GeneratedChunksDict.ContainsKey(l))
-                {
-                    EnableChunkAt(l);
-                }
-                else
-                {
-                    GenerateChunkAt(l);
-                }
+                result.Add(o);
             }
         }
-        //Get active chunks including new chunks
-        List<Vector2Int> activeChunks = new List<Vector2Int>();
-        foreach (var l in ActiveChunksDict.Keys)
-        {
-            activeChunks.Add(l);
-        }
-
-        //Remove new chunks from the list
-        foreach (var l in requiredChunks)
-        {
-            activeChunks.Remove(l);
-        }
-
-        //The rest are the chunks not needed 
-        foreach (var l in activeChunks)
-        {
-            DisableChunkAt(l);
-        }
-
+        return result.ToArray();
     }
-    public void RefreshAllActiveChunks()
+    //Get the next object in the list, back to start if ended
+    public ObjectComponent GetNextObject(ObjectComponent o)
     {
-        foreach (var c in ActiveChunksDict.Values)
-        {
-            c.UpdateChunk();
-        }
-        Debug.Log("Update ok");
+        int index = ObjectList.IndexOf(o);
+        var result = GetVoxelObject(index + 1 >= ObjectList.Count ? 0 : index + 1);
+        return result;
     }
-    public void GenerateChunkAt(Vector2Int pos)
+    public void DeleteObject(int index)
     {
-        //Instantiate the chunk object under the world object and get the chunk component of it
-        ChunkComponent component = GameObject.Instantiate(
-            Resources.Load<GameObject>("Prefabs/ChunkObject"),
-            new Vector3(pos.x * ChunkData.CHUNK_SIZE, 0, pos.y * ChunkData.CHUNK_SIZE),
-            Quaternion.Euler(0, 0, 0),
-            worldTransform).GetComponent<ChunkComponent>();
-
-        //Initialize the chunk data of the component
-        component.chunkData = new ChunkData();
-        //Add to global dict
-        GeneratedChunksDict.Add(pos, component);
-        ActiveChunksDict.Add(pos, component);
-        //Update chunk after generated
-        component.UpdateChunk();
+        GameObject.Destroy(ObjectList[index].gameObject);
+        ObjectList.RemoveAt(index);
     }
-
-    public void DisableChunkAt(Vector2Int pos)
+    public void DeleteObject(ObjectComponent o)
     {
-        ActiveChunksDict[pos].gameObject.SetActive(false);
-        ActiveChunksDict.Remove(pos);
+        GameObject.Destroy(o.gameObject);
+        ObjectList.Remove(o);
     }
-    public void EnableChunkAt(Vector2Int pos)
-    {
-        ActiveChunksDict.Add(pos, GeneratedChunksDict[pos]);
-        ActiveChunksDict[pos].gameObject.SetActive(true);
-    }
-    public void UpdateChunkAt(Vector2Int position)
-    {
-        ActiveChunksDict[position].UpdateChunk();
-    }
-
-
 }
