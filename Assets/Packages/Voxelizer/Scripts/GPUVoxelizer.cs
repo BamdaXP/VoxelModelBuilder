@@ -56,13 +56,15 @@ namespace VoxelSystem {
             var hunit = unit * 0.5f;
 
             // Extend (min & max) to voxelize boundary surface correctly.
-            var start = bounds.min-hunit ;
+            var start = bounds.min ;
             start = worldToObjMat.inverse.MultiplyPoint(start);
             start = new Vector3(Mathf.RoundToInt(start.x), Mathf.RoundToInt(start.y), Mathf.RoundToInt(start.z));
+            start -= worldUnitVec;
             start = worldToObjMat.MultiplyPoint(start);
-            var end = bounds.max+hunit;
+            var end = bounds.max;
             end = worldToObjMat.inverse.MultiplyPoint(end);
             end = new Vector3(Mathf.RoundToInt(end.x), Mathf.RoundToInt(end.y), Mathf.RoundToInt(end.z));
+            end += worldUnitVec;
             end = worldToObjMat.MultiplyPoint(end);
             var size = end - start;
 
