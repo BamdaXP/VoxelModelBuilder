@@ -27,7 +27,7 @@ public class HitPointReader : MonoBehaviour
         if (hit.collider)
         {
             hitting = true;
-            hitPoint.position = hit.point;
+            hitPoint.position = hit.point/WorldDataManager.Instance.ActiveWorld.worldSize;
             hitPoint.normal = hit.normal;
         }
 

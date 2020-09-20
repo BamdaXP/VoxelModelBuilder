@@ -72,11 +72,17 @@ public class VoxelPlacer : MonoBehaviour
             //Erase
             else if (Input.GetKeyDown(KeyCode.Mouse1))
             {
+                List<ObjectComponent> deleteObjects = new List<ObjectComponent>();
                 foreach (var o in objectSelector.selectedObjects)
                 {
                     WorldDataManager.Instance.ActiveWorld.DeleteVoxelAt(o, 
                         hitPointReader.hitPoint.position - hitPointReader.hitPoint.normal / 2);
+                    if (o.voxelObjectData.VoxelDataDict.Count == 0) deleteObjects.Add(o);
                     o.UpdateObjectMesh();
+                }
+                for (int i = 0; i < deleteObjects.Count;i++)
+                {
+                    WorldDataManager.Instance.ActiveWorld.DeleteObject(deleteObjects[i]);
                 }
             }
         }

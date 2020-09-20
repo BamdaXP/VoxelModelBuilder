@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 public class ObjectComponent : MonoBehaviour
 {
-    public Vector3Int basePoint;
+    public Vector3Int gridBasePoint;
     //Local Coordinates data
     public ObjectData voxelObjectData;
 
@@ -11,11 +11,11 @@ public class ObjectComponent : MonoBehaviour
 
     private void Update()
     {
-        transform.position = basePoint;
+        transform.position = (gridBasePoint-Vector3.zero)*WorldDataManager.Instance.ActiveWorld.worldSize;
     }
     public bool IsNearVoxel(Vector3 worldPosition)
     {
-        var localPos = MathHelper.WorldPosToWorldIntPos(worldPosition)-basePoint;
+        var localPos = MathHelper.WorldPosToWorldIntPos(worldPosition)-gridBasePoint;
         foreach (var p in voxelObjectData.VoxelDataDict.Keys)
         {
             if ((localPos - p).magnitude <= 1.01f)

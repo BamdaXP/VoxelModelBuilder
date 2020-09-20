@@ -9,4 +9,12 @@ public static class MathHelper
             Mathf.FloorToInt(worldPos.z));
         return value;
     }
+    static public Vector3 IntPosScaleByFloat(Vector3Int IntPos,float scale)
+    {
+        Vector3 value = new Vector3(
+            IntPos.x * scale,
+            IntPos.y * scale,
+            IntPos.z * scale);
+        return value;
+    }
 }
