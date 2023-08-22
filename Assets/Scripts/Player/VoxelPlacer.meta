@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scripts/Player/VoxelPlacer.meta
 guid: e0cd090055b8b354d9a53c95849f73a4
+========
+guid: bd6ef11c52c7db2448fbb9f9667fae42
+>>>>>>>> ObjectControl:Assets/Scripts/Player/ObjectManipulation.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

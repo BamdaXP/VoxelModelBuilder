@@ -8,7 +8,7 @@ public class WorldData
 {
     public static Transform WorldTransform => GameObject.Find("WorldObject").GetComponent<Transform>();
     public string name;
-
+    public float worldSize = 0.1f;
 
     public List<ObjectComponent> ObjectList;
     public WorldData(string name)
@@ -18,7 +18,7 @@ public class WorldData
         ObjectList = new List<ObjectComponent>();
     }
 
-
+  
     public enum MergeType
     {
         Or,
@@ -33,7 +33,7 @@ public class WorldData
             case MergeType.Or:
                 foreach (var pair in o2.voxelObjectData.VoxelDataDict)
                 {
-                    Vector3Int worldPos = pair.Key + o2.basePoint;
+                    Vector3Int worldPos = pair.Key + o2.gridBasePoint;
                     Voxel v1 = GetVoxelAt(o1, worldPos);
                     Voxel v2 = pair.Value;//o2 must has
                     //If o1 dosen't have but o2 has
@@ -43,28 +43,33 @@ public class WorldData
                         SetVoxelAt(o1, worldPos, v2);
                     }
                 }
+                DeleteObject(o2);
+                o1.UpdateObjectMesh();
                 break;
             case MergeType.And:
                 Dictionary<Vector3Int, Voxel> newDataDict = new Dictionary<Vector3Int, Voxel>();
                 foreach (var pair in o1.voxelObjectData.VoxelDataDict)
                 {
                     
-                    Vector3Int worldPos = pair.Key + o1.basePoint;
+                    Vector3Int worldPos = pair.Key + o1.gridBasePoint;
                     Voxel v2 = GetVoxelAt(o2, worldPos);
                     //If o1 and 2o both have
                     if (v2.voxel != null)
                     {
                         //Set empty voxel
-                        newDataDict.Add(pair.Key - o1.basePoint, pair.Value);
+                        newDataDict.Add(pair.Key - o1.gridBasePoint, pair.Value);
                     }
                     //change to new data dict
                     o1.voxelObjectData.VoxelDataDict = newDataDict;
                 }
+                DeleteObject(o2);
+                o1.UpdateObjectMesh();
                 break;
             case MergeType.Not:
+                List<Vector3Int> samePosList = new List<Vector3Int>();
                 foreach (var pair in o2.voxelObjectData.VoxelDataDict)
                 {
-                    Vector3Int worldPos = pair.Key + o2.basePoint;
+                    Vector3Int worldPos = pair.Key + o2.gridBasePoint;
                     Voxel v1 = GetVoxelAt(o1, worldPos);
                     Voxel v2 = pair.Value;//o2 must has 
                     //If o1 and o2 both has
@@ -72,29 +77,33 @@ public class WorldData
                     {
                         //Set empty voxel
                         SetVoxelAt(o1, worldPos, new Voxel());
+                        samePosList.Add(worldPos);
                     }
                 }
+                foreach (var worldPos in samePosList)
+                    SetVoxelAt(o2, worldPos, new Voxel());
+                o1.UpdateObjectMesh();
+                o2.UpdateObjectMesh();
                 break;
             default:
                 break;
         }
-        DeleteObject(o2);
-        o1.UpdateObjectMesh();
+        
     }
     public Voxel GetVoxelAt(ObjectComponent obj, Vector3 worldPos)
     {
         Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
-        return obj.voxelObjectData.GetVoxelAt(p - obj.basePoint);
+        return obj.voxelObjectData.GetVoxelAt(p - obj.gridBasePoint);
     }
     public void SetVoxelAt(ObjectComponent obj, Vector3 worldPos, Voxel v)
     {
         Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
-        obj.voxelObjectData.SetVoxelAt(p - obj.basePoint, v);
+        obj.voxelObjectData.SetVoxelAt(p - obj.gridBasePoint, v);
     }
     public void DeleteVoxelAt(ObjectComponent obj, Vector3 worldPos)
     {
         Vector3Int p = MathHelper.WorldPosToWorldIntPos(worldPos);
-        obj.voxelObjectData.DeleteVoxelAt(p - obj.basePoint);
+        obj.voxelObjectData.DeleteVoxelAt(p - obj.gridBasePoint);
     }
     public void UpdateAllObjects()
     {
@@ -103,7 +112,7 @@ public class WorldData
             o.UpdateObjectMesh();
         }
     }
-    public ObjectComponent CreateNewObject(Vector3Int basePoint)
+    public ObjectComponent CreateNewObject(Vector3Int basePoint,bool isStatic = false)
     {
 
         var c = GameObject.Instantiate(
@@ -113,16 +122,41 @@ public class WorldData
             WorldTransform).GetComponent<ObjectComponent>();
 
         //Setup object
-        c.basePoint = basePoint;
+        c.gridBasePoint = basePoint;
         c.voxelObjectData = new ObjectData();
+        c.voxelObjectData.isStatic = isStatic;
 
         ObjectList.Add(c);
 
         return c;
     }
+    public void CreateNewObjectFromGridData(List<Vector3Int> GridData, Voxel v, bool isStatic = false)
+    {
+        if (v.voxel == null)
+        {
+            v.voxel = VoxelInfoLibrary.GetVoxel("Stone");
+            v.color = Color.white;
+        }
+        var c = GameObject.Instantiate(
+           Resources.Load<GameObject>("Prefabs/VoxelObject"),
+           GridData[0],
+           Quaternion.Euler(new Vector3(0, 0, 0)),
+           WorldTransform).GetComponent<ObjectComponent>();
+
+        //Setup object
+        c.gridBasePoint = GridData[0];
+        c.voxelObjectData = new ObjectData();
+        c.voxelObjectData.isStatic = isStatic;
+        foreach (var worldPos in GridData)
+        {
+            SetVoxelAt(c, worldPos, v);
+        }
+
+        ObjectList.Add(c);
+    }
     public ObjectComponent CopyObject(ObjectComponent o)
     {
-        var newObject = CreateNewObject(o.basePoint);
+        var newObject = CreateNewObject(o.gridBasePoint);
         foreach (var pair in o.voxelObjectData.VoxelDataDict)
         {
             newObject.voxelObjectData.VoxelDataDict.Add(pair.Key, pair.Value);
@@ -147,7 +181,7 @@ public class WorldData
         {
             Vector3Int intPos = MathHelper.WorldPosToWorldIntPos(worldPos);
             //local position
-            if (o.voxelObjectData.GetVoxelAt(intPos-o.basePoint).voxel != null)
+            if (o.voxelObjectData.GetVoxelAt(intPos-o.gridBasePoint).voxel != null)
             {
                 result.Add(o);
             }

@@ -4,10 +4,24 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SocialPlatforms;
 [Serializable]
-public struct Voxel
+public struct Voxel : IEquatable<Voxel>
 {
     public VoxelInfo voxel;
     public Color color;
+
+	public bool Equals(Voxel other)
+	{
+		return EqualityComparer<VoxelInfo>.Default.Equals(voxel, other.voxel) &&
+			   color.Equals(other.color);
+	}
+    
+	public override int GetHashCode()
+	{
+		int hashCode = 1806356647;
+		hashCode = hashCode * -1521134295 + EqualityComparer<VoxelInfo>.Default.GetHashCode(voxel);
+		hashCode = hashCode * -1521134295 + color.GetHashCode();
+		return hashCode;
+	}
 }
 public class ObjectData
 {
@@ -67,6 +81,7 @@ public class ObjectData
     };
 
     public Dictionary<Vector3Int, Voxel> VoxelDataDict;
+    public bool isStatic = false;
 
     public ObjectData()
     {
@@ -75,12 +90,11 @@ public class ObjectData
 
     public Voxel GetVoxelAt(Vector3Int localPosition)
     {
-        foreach (var pair in VoxelDataDict)
+        if (VoxelDataDict.ContainsKey(localPosition))
         {
-            //Found
-            if (pair.Key == localPosition)
-                return pair.Value;
+            return VoxelDataDict[localPosition];
         }
+        else
         //Not Found
         return new Voxel();
     }
@@ -103,9 +117,10 @@ public class ObjectData
             VoxelDataDict.Remove(localPosition);
         }
     }
+    
     public void GenerateMeshAndMats(out Mesh mesh, out Material[] mats)
     {
-        Dictionary<VoxelInfo, List<Vector3>> voxelVertListDict = new Dictionary<VoxelInfo, List<Vector3>>();
+        Dictionary<Voxel, List<Vector3>> voxelVertListDict = new Dictionary<Voxel, List<Vector3>>();
         List<Material> voxelMatsList = new List<Material>();
 
         foreach (var pair in VoxelDataDict)
@@ -116,15 +131,17 @@ public class ObjectData
                 {
                     if (GetVoxelAt(pair.Key + NORMALS[i]).voxel == null)
                     {
-                        if (!voxelVertListDict.ContainsKey(pair.Value.voxel))
+                        if (!voxelVertListDict.ContainsKey(pair.Value))
                         {
-                            voxelVertListDict.Add(pair.Value.voxel, new List<Vector3>());
-                            voxelMatsList.Add(pair.Value.voxel.material);
+                            voxelVertListDict.Add(pair.Value, new List<Vector3>());
+                            var mat = new Material(pair.Value.voxel.material);
+                            mat.color = pair.Value.color;
+                            voxelMatsList.Add(mat);
                         }
-                        var verts = voxelVertListDict[pair.Value.voxel];
+                        var verts = voxelVertListDict[pair.Value];
                         foreach (var p in QUAD_VERTS[i])
                         {
-                            verts.Add(p+pair.Key);
+                            verts.Add((p+pair.Key) * WorldDataManager.Instance.ActiveWorld.worldSize);
                         }
                     }
 

@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scripts/Player/ObjectManipulation.meta
 guid: bd6ef11c52c7db2448fbb9f9667fae42
+========
+guid: c6211bec1ecb5324a83774ecdf9c170e
+>>>>>>>> ObjectControl:Assets/Scripts/Player/FaceStretcher.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

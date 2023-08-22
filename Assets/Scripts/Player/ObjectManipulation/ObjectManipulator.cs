@@ -85,7 +85,7 @@ public class ObjectManipulator : MonoBehaviour
         }
         foreach (var o in objectSelector.selectedObjects)
         {
-            o.basePoint += delta;
+            o.gridBasePoint += delta;
         }
     }
 }

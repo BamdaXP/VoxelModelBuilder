@@ -11,6 +11,7 @@ public class MouseIndicator : MonoBehaviour
     void Start()
     {
         m_renderer = GetComponent<MeshRenderer>();
+        transform.localScale *= WorldDataManager.Instance.ActiveWorld.worldSize;
     }
 
     // Update is called once per frame
@@ -20,9 +21,9 @@ public class MouseIndicator : MonoBehaviour
         if (hitPointReader.hitting)
         {
             m_renderer.enabled = true;
-            transform.position = MathHelper.WorldPosToWorldIntPos(
-                hitPointReader.hitPoint.position - hitPointReader.hitPoint.normal / 2) +
-                new Vector3(0.5f, 0.5f, 0.5f);//Mesh offset
+            transform.position = MathHelper.IntPosScaleByFloat(MathHelper.WorldPosToWorldIntPos(
+                (hitPointReader.hitPoint.position - hitPointReader.hitPoint.normal / 2)), WorldDataManager.Instance.ActiveWorld.worldSize) +
+                new Vector3(0.5f, 0.5f, 0.5f)*WorldDataManager.Instance.ActiveWorld.worldSize;//Mesh offset
         }
     }
 }

@@ -84,8 +84,8 @@ public class FaceSelector : MonoBehaviour
                             {
                                 for (int z = min.z; z <= max.z; z++)
                                 {
-                                    Vector3Int pos = new Vector3Int(x, y, z);
-                                    if (o.voxelObjectData.GetVoxelAt(pos-o.basePoint).voxel != null)
+                                    Vector3Int pos = new Vector3Int(x, y, z) - o.gridBasePoint;
+                                    if (o.voxelObjectData.GetVoxelAt(pos).voxel != null)
                                     {
                                         points.Add(pos);
                                     }
